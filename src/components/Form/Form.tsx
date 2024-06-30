@@ -1,85 +1,79 @@
-import { Container, ContainerSucces } from './styles'
-import { useForm, ValidationError } from '@formspree/react'
-import { toast, ToastContainer } from 'react-toastify'
-import ReCAPTCHA from 'react-google-recaptcha'
-import { useEffect, useState } from 'react'
-import validator from 'validator'
+import { Container, ContainerSucces } from "./styles";
+import { useForm, ValidationError } from "@formspree/react";
+import { toast, ToastContainer } from "react-toastify";
+import ReCAPTCHA from "react-google-recaptcha";
+import { useEffect, useState } from "react";
+import validator from "validator";
+import React, { useRef } from "react";
+import emailjs from "@emailjs/browser";
 
-export function Form() {
-  const [state, handleSubmit] = useForm('xknkpqry')
-  const [validEmail, setValidEmail] = useState(false)
-  const [isHuman, setIsHuman] = useState(false)
-  const [message, setMessage] = useState('')
-  function verifyEmail(email: string) {
-    if (validator.isEmail(email)) {
-      setValidEmail(true)
-    } else {
-      setValidEmail(false)
-    }
-  }
-  useEffect(() => {
-    if (state.succeeded) {
-      toast.success('Email successfully sent!', {
-        position: toast.POSITION.BOTTOM_LEFT,
-        pauseOnFocusLoss: false,
-        closeOnClick: true,
-        hideProgressBar: false,
-        toastId: 'succeeded',
-      })
-    }
-  })
-  if (state.succeeded) {
-    return (
-      <ContainerSucces>
-        <h3>Thanks for getting in touch!</h3>
-        <button
-          onClick={() => {
-            window.scrollTo({ top: 0, behavior: 'smooth' })
-          }}
-        >
-          Back to the top
-        </button>
-        <ToastContainer />
-      </ContainerSucces>
-    )
-  }
+export const Form = () => {
+  const [formData, setFormData] = useState({
+    user_name: "",
+    user_email: "",
+    message: "",
+  });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    emailjs
+      .sendForm(
+        "service_v14lpcr",
+        "template_uo8d0lq",
+        e.target,
+        "u4lTlkYdRGTKg9Hee"
+      )
+      .then(
+        (result) => {
+          alert("Mensaje enviado!");
+          setFormData({ name: "", email: "", message: "" });
+        },
+        (error) => {
+          alert("Ocurrió un error, por favor intenta nuevamente.");
+        }
+      );
+  };
+
   return (
-    <Container>
-      <h2>Get in touch using the form</h2>
+    <div className="App">
+      <h1>Formulario de Contacto</h1>
       <form onSubmit={handleSubmit}>
-        <input
-          placeholder="Email"
-          id="email"
-          type="email"
-          name="email"
-          onChange={(e) => {
-            verifyEmail(e.target.value)
-          }}
-          required
-        />
-        <ValidationError prefix="Email" field="email" errors={state.errors} />
-        <textarea
-          required
-          placeholder="Send a message to get started."
-          id="message"
-          name="message"
-          onChange={(e) => {
-            setMessage(e.target.value)
-          }}
-        />
-        <ValidationError
-          prefix="Message"
-          field="message"
-          errors={state.errors}
-        />
-        <button
-          type="submit"
-          disabled={state.submitting || !validEmail || !message || !isHuman}
-        >
-          Submit
-        </button>
+        <div>
+          <label>Nombre:</label>
+          <input
+            type="text"
+            name="user_name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div>
+          <label>Email:</label>
+          <input
+            type="email"
+            name="user_email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div>
+          <label>Mensaje:</label>
+          <textarea
+            name="message"
+            value={formData.message}
+            onChange={handleChange}
+            required
+          ></textarea>
+        </div>
+        <button type="submit">Enviar</button>
       </form>
-      <ToastContainer />
-    </Container>
-  )
-}
+    </div>
+  );
+};
