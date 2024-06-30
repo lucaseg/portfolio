@@ -8,11 +8,26 @@ import React, { useRef } from "react";
 import emailjs from "@emailjs/browser";
 
 export const Form = () => {
+  const [validEmail, setValidEmail] = useState(false);
+  const [message, setMessage] = useState("");
+  const [state, _] = useForm("xknkpqry");
+  const [isHuman, setIsHuman] = useState(true);
+  const [showPopup, setShowPopup] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     user_name: "",
     user_email: "",
-    message: "",
   });
+
+  function verifyEmail(email: string) {
+    setFormData({user_email: email});
+    if (validator.isEmail(email)) {
+      setValidEmail(true);
+    } else {
+      setValidEmail(false);
+    }
+  }
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,7 +35,7 @@ export const Form = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
+    setIsLoading(true);
     emailjs
       .sendForm(
         "service_v14lpcr",
@@ -30,50 +45,79 @@ export const Form = () => {
       )
       .then(
         (result) => {
-          alert("Mensaje enviado!");
-          setFormData({ name: "", email: "", message: "" });
+          setIsLoading(false);
+          setShowPopup(true);
+          setFormData({ user_name: "", user_email: ""});
+          setTimeout(() => setShowPopup(false), 3000); // Ocultar popup después de 3 segundos
         },
         (error) => {
+          setIsLoading(false);
           alert("Ocurrió un error, por favor intenta nuevamente.");
         }
       );
   };
 
   return (
-    <div className="App">
-      <h1>Formulario de Contacto</h1>
+    <Container>
+      <h2>Get in touch using the form</h2>
       <form onSubmit={handleSubmit}>
-        <div>
-          <label>Nombre:</label>
+        <div className = "row">
           <input
+          className="children"
             type="text"
             name="user_name"
-            value={formData.name}
+            placeholder="Name"
+            value={formData.user_name}
             onChange={handleChange}
             required
           />
         </div>
-        <div>
-          <label>Email:</label>
+        <ValidationError prefix="Email" field="email" errors={state.errors} />
+        <div className = "row">
+
+          
+          <div className="children">
           <input
+          
+            placeholder="Email"
+            id="email"
             type="email"
             name="user_email"
-            value={formData.email}
-            onChange={handleChange}
+            value={formData.user_email}
+            onChange={(e) => {
+              verifyEmail(e.target.value);
+            }}
             required
           />
+          </div>
+     
         </div>
-        <div>
-          <label>Mensaje:</label>
+        <div className = "row">
           <textarea
             name="message"
-            value={formData.message}
-            onChange={handleChange}
+            id="message"
+            placeholder="Send a message to get started."
+            onChange={(e) => {
+              setMessage(e.target.value);
+            }}
             required
           ></textarea>
         </div>
-        <button type="submit">Enviar</button>
+        <button
+          type="submit"
+          disabled={state.submitting || !validEmail || !message
+          }>
+         {isLoading ? <div className="spinner"></div> : "Submit"} 
+        </button>
       </form>
-    </div>
+      {showPopup && (
+        <div className="popup">
+          <div className="popup-content">
+            <p>Message sent</p>
+          </div>
+        </div>
+      )}
+      <ToastContainer />
+    </Container>
   );
 };
